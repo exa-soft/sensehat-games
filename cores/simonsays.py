@@ -26,10 +26,16 @@ class SimonSays(object):
         self.solution = self.randomSolution(self.size)
         logging.info ("solution is: ", self.solution)
         self.curLen = 0
+        self.afterRestart()
         self.nextRound()
 
+    def afterRestart(self):
+        """ maybe do something when a new game is started"""
+        print("neue Lösung bereit (Länge: {})".format(self.size))
+        # TODO we want to plug-in our own method for displaying the "colors"
 
     def nextRound(self):
+        """start the next round ('saying' something which is 1 longer than before)"""
         self.curLen += 1
         self.initMachine (self.curLen)
         self.say()
@@ -38,6 +44,12 @@ class SimonSays(object):
         """ maybe do something before saying the 'colors'"""
         print("Pass auf! Hier kommt's:")
         # TODO we want to plug-in our own method for displaying the "colors"
+
+    def beforeHearingColors(self):
+        """ maybe do something to start 'listening' to the 'colors'"""
+        print("Jetzt bist du dran")
+        # TODO we want to plug-in our own method for starting to listen
+
 
     def sayColor (self, color):
         """display one color - this method should be given / plugged in by the class using SimonSays"""
@@ -49,6 +61,7 @@ class SimonSays(object):
         self.beforeSayingColors()
         for i in range(self.curLen):
             self.sayColor(self.solution[i])
+        self.beforeHearingColors()
 
     def hearColor(self, color):
         """simon hears the other player say a color (0..3)"""
@@ -95,14 +108,23 @@ class SimonSays(object):
         logging.debug('statemachine initialized')
 
 
-simon = SimonSays(5)
+#simon = SimonSays(5)
 
-# Initialize
-def init():
-    logging.info ("state: ", simon.state)
+def test(testlen):
+    
+    simon = SimonSays(testlen)
+    print('[testout] testing riddle of length', testlen, ', current length', simon.curLen)
+    for i in range(simon.size):
+        print('[testout] solution', i, ':', simon.solution[i])
 
-
+    for curTestLen in range(testlen):
+        # we know the solution... - say numbers up to current length
+        for i in range(simon.curLen):
+            simon.hearColor(simon.solution[i])
+            print('[testout] state: ', simon.state)
+        
+        print ('[testout] solved length', simon.curLen)
+   
 if __name__ == "__main__":
-    #import sys
-    #fib(int(sys.argv[1]))
-    init()
+    test(3)
+    
