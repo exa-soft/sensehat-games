@@ -6,9 +6,29 @@ from random import Random
 
 
 class SimonSays(object):
-    """Class for a round of SimonSays on a vocabulary of four possible values (0, 1, 2, 3)"""
+    """Class for a round of SimonSays on a vocabulary of four possible values (0, 1, 2, 3)
+    To play a game:
+    - init the object with the length of the final solution, e.g. simon = SimonSays(5)
+    - call simon.restart() to start the game (this will start 'saying')
+    - listen to user input and give it (as a number from 0..3) to simon using  simon.hearColor(the number)
+    See also example in  test().
+    Subclasses should overwrite:
+    - onRestart()
+    - beforeSayingColors()
+    - beforeHearingColors()
+    - sayColor(solor)
+    - roundSolved()
+    - wrongColor()
+    - gameSolved()
+    """
 
-    def randomSolution(self, size):
+
+    def __init__(self, length):
+        """init a SimonSays game with the given maximal length"""
+        self.size = length
+        self._reset()
+
+    def _randomSolution(self, size):
         r = Random()
         r.seed()
         sol = []
@@ -16,29 +36,30 @@ class SimonSays(object):
             sol.append(r.randint(0, 3))
         return sol
 
-    def __init__(self, length):
-        """init a SimonSays game with the given maximal length"""
-        self.size = length
-        self.restart()
-
-    def restart(self):
-        """restart the game (with a new solution)"""
-        self.solution = self.randomSolution(self.size)
+    def _reset(self):
+        """reset internal variables (new solution)"""
+        logging.debug('restart')
+        self.solution = self._randomSolution(self.size)
         logging.info ("solution is: ", self.solution)
         self.curLen = 0
-        self.afterRestart()
-        self.nextRound()
 
-    def afterRestart(self):
+    def restart(self):
+        """start or restart the game (with a new solution)"""
+        self._reset()
+        self.onRestart()
+        self._nextRound()
+
+    def onRestart(self):
         """ maybe do something when a new game is started"""
         print("neue Lösung bereit (Länge: {})".format(self.size))
         # TODO we want to plug-in our own method for displaying the "colors"
 
-    def nextRound(self):
+    def _nextRound(self):
         """start the next round ('saying' something which is 1 longer than before)"""
+        logging.debug('nextRound')
         self.curLen += 1
         self.initMachine (self.curLen)
-        self.say()
+        self._say()
 
     def beforeSayingColors(self):
         """ maybe do something before saying the 'colors'"""
@@ -56,8 +77,9 @@ class SimonSays(object):
         print('- ', color)
         # TODO we want to plug-in our own method for displaying the "colors"
 
-    def say(self):
+    def _say(self):
         """simon says the 'sentence' of the current length"""
+        logging.debug('say')
         self.beforeSayingColors()
         for i in range(self.curLen):
             self.sayColor(self.solution[i])
@@ -65,6 +87,7 @@ class SimonSays(object):
 
     def hearColor(self, color):
         """simon hears the other player say a color (0..3)"""
+        logging.debug('hear color: ', color)
         print("hearing color ", color)
         res = self.trigger('gotColor' + str(color))
         if not res:
@@ -79,10 +102,11 @@ class SimonSays(object):
         print("-----!!! falsch !!!-----------")
         # TODO we want to plug-in our own method for displaying "wrong"
 
-    def solved(self):
+    def _solved(self):
+        logging.debug('solved')
         self.roundSolved()
         if self.curLen < self.size:
-            self.nextRound()
+            self._nextRound()
         else:
             self.gameSolved()
 
@@ -94,6 +118,7 @@ class SimonSays(object):
 
     def initMachine(self, size):
         """init state-machine: states correct0, correct1, etc. up to size"""
+        logging.debug('initMachine, size:', size)
         self.states = ["correct" + str(i) for i in range(size+1)]
         logging.debug("states are: ", self.states)
         self.machine = Machine(model=self, states=self.states, initial='correct0', ignore_invalid_triggers=True)
@@ -104,27 +129,29 @@ class SimonSays(object):
                 .format('gotColor' + str(self.solution[i]), 'correct'+str(i), 'correct'+str(i+1)))
 
         lastState = self.machine.get_state('correct' + str(size))
-        lastState.add_callback('enter', self.solved)
+        lastState.add_callback('enter', self._solved)
         logging.debug('statemachine initialized')
 
+    def __str__(self):
+        return 'SimonSays (final length {sf.size}, current length {sf.curLen}, solution {sf.solution})'.format(sf=self)
 
-#simon = SimonSays(5)
 
 def test(testlen):
-    
+
     simon = SimonSays(testlen)
-    print('[testout] testing riddle of length', testlen, ', current length', simon.curLen)
+    print('[testout]', simon)
     for i in range(simon.size):
         print('[testout] solution', i, ':', simon.solution[i])
+
+    simon.restart()
 
     for curTestLen in range(testlen):
         # we know the solution... - say numbers up to current length
         for i in range(simon.curLen):
             simon.hearColor(simon.solution[i])
             print('[testout] state: ', simon.state)
-        
-        print ('[testout] solved length', simon.curLen)
-   
+
 if __name__ == "__main__":
+    #logging.getLogger().setLevel(logging.DEBUG)
     test(3)
-    
+
