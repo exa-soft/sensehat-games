@@ -3,15 +3,16 @@ import logging
 
 class SimonTurtle(object):
     """Class for the display of SimonSays with the turtle.
-    To use the class, overwrite the hook method  heardColor(colorNum)
+    To use the class, overwrite the hook method  receivedColor(colorNum)
     """
 
     #constants
-    baseX = -300
-    baseY = 100
-    sizeX = 50
+    sizeXY = 50
     spaceX = 20
     spaceY = 50
+    baseX = -400
+    baseYTop = 100
+    baseYBtm = baseYTop - (1.5 * sizeXY)
     colors = ['blue', 'green' , 'yellow', 'red']
     font = ('Arial', 12, 'normal')
     align = 'left'  # or 'center' or 'right'
@@ -25,25 +26,26 @@ class SimonTurtle(object):
         self.reset()
 
     def reset(self):
+        """reset display to be ready for a new game"""
         self.curPos = 0
         self.isTopRow = True
         turtle.clear()
         turtle.penup()
-        turtle.setpos((self.baseX, self.baseY + 3 * self.spaceY))
-        turtle.pendown()
+        turtle.setpos((self.baseX, self.baseYTop + 3 * self.spaceY))
         turtle.write("Neues Rätsel bereit", move=False, align=self.align, font=self.font)
-        turtle.penup()
+        turtle.setpos((self.baseX, self.baseYTop + 2 * self.spaceY))
+        turtle.write("0: blau, 1: grün, 2: gelb, 3: rot", move=False, align=self.align, font=self.font)
         self.screen = turtle.Screen()
 
-    def clearSolutionArea(self):
-        turtle.setpos((self.baseX, self.baseY + 0.5 * self.spaceY))
-        turtle.pendown()
-        turtle.color('black', 'white')
+    def _clearGameArea(self):
+        """clear game area (display and solution - to be ready for the next round)"""
+        turtle.setpos((self.baseX, self.baseYBtm))
+        turtle.color('white', 'white')
         turtle.pensize(width=1)
         turtle.pendown()
         turtle.begin_fill()
-        width = 7 * (self.sizeX + self.spaceX)
-        height = self.sizeY
+        width = 10 * (self.sizeXY + self.spaceX)
+        height = self.sizeXY * 2 + self.spaceY
         turtle.forward(width)
         turtle.left(90)
         turtle.forward(height)
@@ -51,74 +53,76 @@ class SimonTurtle(object):
         turtle.forward(width)
         turtle.left(90)
         turtle.forward(height)
+        turtle.left(90)
         turtle.end_fill()
         turtle.penup()
 
-    def pos2XY(self):
+    def _pos2XY(self):
         """calculates x/y-position from posNum and isTopRow"""
-        x = self.baseX if self.isTopRow else self.baseX + self.curPos * (self.sizeX + self.spaceX)
-        y = (self.baseY + 0.5 * self.spaceY) if self.isTopRow else (self.baseY - self.spaceY)
+        x = self.baseX if self.isTopRow else self.baseX + self.curPos * (self.sizeXY + self.spaceX)
+        y = self.baseYTop if self.isTopRow else self.baseYBtm
         return (x, y)
 
-    def paintColor (self, color):
-        """paint a square of size sizeX at the current position, with the given color"""
-        turtle.color('black', color)
+    def _paintColor (self, color, borderColor='black'):
+        """paint a square of size sizeXY at the current position, with the given color"""
+        turtle.color(borderColor, color)
         turtle.pensize(width=1)
         turtle.pendown()
         turtle.begin_fill()
         for i in range(4):
-            turtle.forward(self.sizeX)
+            turtle.forward(self.sizeXY)
             turtle.left(90)
         turtle.end_fill()
         turtle.penup()
 
-    def gotoPos (self):
+    def _gotoPos (self):
         """moves the turtle to the position defined by posNum and isTopRow"""
-        turtle.setpos(self.pos2XY())
+        turtle.setpos(self._pos2XY())
 
     def showColor (self, colorNum):
         """show the given color at the current position"""
-        self.paintColor(self.colors[colorNum])
+        self._paintColor(self.colors[colorNum])
 
-    def nextPos (self):
+    def _nextPos (self):
         """moves the internal variables and the turtle to the next output position"""
         self.curPos += 1
-        self.gotoPos()
+        self._gotoPos()
 
-    def heardColor(self, colorNum) :
+    def receivedColor(self, colorNum) :
         """subclasses will implement this method to be notified
         when the user has input a color"""
         logging.info('received color: {}'.format(colorNum))
 
-    def heardCol0Go(self):
+    def _recvdCol0Go(self):
         self.showColorAndMove(0)
-        self.heardColor(0)
+        self.receivedColor(0)
 
-    def heardCol1Go(self):
+    def _recvdCol1Go(self):
         self.showColorAndMove(1)
-        self.heardColor(1)
+        self.receivedColor(1)
 
-    def heardCol2Go(self):
+    def _recvdCol2Go(self):
         self.showColorAndMove(2)
-        self.heardColor(2)
+        self.receivedColor(2)
 
-    def heardCol3Go(self):
+    def _recvdCol3Go(self):
         self.showColorAndMove(3)
-        self.heardColor(3)
+        self.receivedColor(3)
 
     def showColorAndMove(self, colorNum):
         self.showColor (colorNum)
-        self.nextPos()
+        self._nextPos()
 
     def startSaying(self):
-        turtle.setpos((self.baseX, self.baseY + 2 * self.spaceY))
-        #turtle.color('black', color)
-        turtle.pendown()    # test if necessary
-        turtle.write("Achtung", move=False, align=self.align, font=self.font)
-        turtle.penup()    # test if necessary
+        """Display message to the user to be attentive"""
+        turtle.setpos((self.baseX + self.sizeXY + self.spaceX, self.baseYTop))
+        turtle.color('black')
+        turtle.write("Merk dir die Farben!", move=False, align=self.align, font=self.font)
+        self._clearGameArea()
+
         self.isTopRow = True
         self.curPos = 0
-        self.gotoPos()
+        self._gotoPos()
         logging.debug ('screen: {}'.format(self.screen))
         self.screen.onkey(None, "0")
         self.screen.onkey(None, "1")
@@ -126,34 +130,38 @@ class SimonTurtle(object):
         self.screen.onkey(None, "3")
 
     def startListening(self):
-        turtle.setpos((self.baseX, self.baseY - 2 * self.spaceY))
-        #turtle.color('black', color)
-        turtle.write("Du bist dran", move=False, align=self.align, font=self.font)
+        """Make ready to receive input from the user and display it"""
+        # cover last displayed color
+        self._paintColor ('white', 'white')
+        # message to user
+        turtle.setpos((self.baseX, self.baseYBtm - self.spaceY))
+        turtle.color('black')
+        turtle.write("Du bist dran", move=True, align=self.align, font=self.font)
         self.isTopRow = False
         self.curPos = 0
-        self.gotoPos()
-        #self.screen.onkey(funct, "Up")
-        self.screen.onkey(self.heardCol0Go, "0")
-        self.screen.onkey(self.heardCol1Go, "1")
-        self.screen.onkey(self.heardCol2Go, "2")
-        self.screen.onkey(self.heardCol3Go, "3")
+        self._gotoPos()
+        self.screen.onkey(self._recvdCol0Go, "0")
+        self.screen.onkey(self._recvdCol1Go, "1")
+        self.screen.onkey(self._recvdCol2Go, "2")
+        self.screen.onkey(self._recvdCol3Go, "3")
         self.screen.listen()
 
+    def roundSolved(self):
+        #turtle.setpos((self.baseX + self.sizeXY + self.spaceX, self.baseYTop))
+        turtle.color('black')
+        turtle.write("Richtig!", move=False, align=self.align, font=self.font)
+
     def writeResult(self, ok):
-        turtle.setpos((self.baseX, self.baseY + 2 * self.spaceY))
+        turtle.setpos((self.baseX, self.baseYBtm - 2 * self.spaceY))
         if ok:
-            turtle.write('Sehr gut!')
+            turtle.color('darkgreen')
+            turtle.write('Sehr gut!', font=self.font)
         else:
-            turtle.write('Das war falsch! Spiel abgebrochen')
+            turtle.color('red')
+            turtle.write('Das war falsch! Spiel abgebrochen', font=self.font)
 
     def __str__(self):
         return 'SimonTurtle (curPos {sf.curPos}, isTopRow {sf.isTopRow})'.format(sf=self)
-
-
-#self.screen.textinput("NIM", "Name of first player:")
-# self.screen.onclick(turtle.goto) # Subsequently clicking into the TurtleScreen will
-                            # make the turtle move to the clicked point.
-#self.screen.onclick(None)
 
 
 if __name__ == "__main__":

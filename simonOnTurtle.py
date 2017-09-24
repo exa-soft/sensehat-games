@@ -2,8 +2,7 @@ import logging
 from cores.simonsays import SimonSays
 #import cores.simonsays as ss
 
-#from output.simonTurtle import SimonTurtle
-import output.simonTurtle as siTurtle
+from output.simonTurtle import SimonTurtle
 
 
 # situ.init()
@@ -15,39 +14,58 @@ class Cat(Pet):
         self.hates_dogs = hates_dogs
 """
 
-class SimonOnTurtle(SimonSays):
+class SimonOnTurtle(SimonSays, SimonTurtle):
 
     def __init__(self, length):
         SimonSays.__init__(self, length)
         print('simonSays length:', self.size)
-        self.situ = siTurtle.SimonTurtle()
-        print('self.situ:', self.situ)
+        SimonTurtle.__init__(self)
 
-    def afterRestart(self):
-        self.situ.reset()
-        print("neue Lösung bereit auf Turtle (Länge: {})".format(self.length))
+    def onRestart(self):
+        """Reset screen on restart
+        (overwritten method from SimonSays)"""
+        SimonTurtle.reset(self)
+        print("neue Lösung bereit auf Turtle (Länge: {})".format(self.size))
 
     def beforeSayingColors(self):
-        self.situ.startSaying()
+        """Message to user that Simon will say something
+        (overwritten method from SimonSays)"""
+        SimonTurtle.startSaying(self)
 
     def beforeHearingColors(self):
-        self.situ.startListening()
+        """Start to listen to user
+        (overwritten method from SimonSays)"""
+        SimonTurtle.startListening(self)
 
     def sayColor(self, colorNum):
-        self.situ.showColor(colorNum)
+        """Display one color "said" by Simon
+        (overwritten method from SimonSays)"""
+        SimonTurtle.showColor(self, colorNum)
 
     def roundSolved(self):
-        self.situ.clearSolutionArea()
+        """Finish round
+        (overwritten method from SimonSays)"""
+        SimonTurtle.roundSolved(self)
 
     def wrongColor(self):
-        self.situ.writeResult(False)
+        """Display error to user on wrong input
+        (overwritten method from SimonSays)"""
+        SimonTurtle.writeResult(self, False)
 
     def gameSolved(self):
-        self.situ.writeResult(True)
+        """Display message to user that game solved
+        (overwritten method from SimonSays)"""
+        SimonTurtle.writeResult(self, True)
+
+    def receivedColor(self, colorNum):
+        """Notify SimonSays about received color
+        (overwritten method from SimonTurtle)"""
+        logging.info('received color: {}'.format(colorNum))
+        SimonSays.hearColor(self, colorNum)
 
 
 def test():
-    tusi = SimonOnTurtle(2)
+    tusi = SimonOnTurtle(3)
     #tusi = ss.SimonSays(4)
     #logging.info ("state: ", tusi.state)
     tusi.restart()
