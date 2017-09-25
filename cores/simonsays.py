@@ -40,7 +40,7 @@ class SimonSays(object):
         """reset internal variables (new solution)"""
         logging.debug('restart')
         self.solution = self._randomSolution(self.size)
-        logging.info ("solution is: ", self.solution)
+        logging.info ("solution is: {}".format(self.solution))
         self.curLen = 0
 
     def restart(self):
@@ -58,7 +58,7 @@ class SimonSays(object):
         """start the next round ('saying' something which is 1 longer than before)"""
         logging.debug('nextRound')
         self.curLen += 1
-        self.initMachine (self.curLen)
+        self._initMachine (self.curLen)
         self._say()
 
     def beforeSayingColors(self):
@@ -87,12 +87,12 @@ class SimonSays(object):
 
     def hearColor(self, color):
         """simon hears the other player say a color (0..3)"""
-        logging.debug('hear color: ', color)
+        logging.debug('hear color: {}'.format(color))
         print("hearing color ", color)
         res = self.trigger('gotColor' + str(color))
         if not res:
             self.wrongColor()
-            return res
+        return res
 
     def roundSolved(self):
         print("------ richtig --------")
@@ -116,11 +116,11 @@ class SimonSays(object):
         # TODO we want to plug-in our own method for what to do when game is solved
 
 
-    def initMachine(self, size):
+    def _initMachine(self, size):
         """init state-machine: states correct0, correct1, etc. up to size"""
-        logging.debug('initMachine, size:', size)
+        logging.debug('initMachine, size: {}'.format(size))
         self.states = ["correct" + str(i) for i in range(size+1)]
-        logging.debug("states are: ", self.states)
+        logging.debug('states are: {}'.format(self.states))
         self.machine = Machine(model=self, states=self.states, initial='correct0', ignore_invalid_triggers=True)
         # ignoring invalid triggers will just return False if state transition not possible -> then we can report error in game
         for i in range(size):
@@ -152,6 +152,6 @@ def test(testlen):
             print('[testout] state: ', simon.state)
 
 if __name__ == "__main__":
-    #logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG)
     test(3)
 
