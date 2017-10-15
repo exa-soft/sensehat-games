@@ -1,10 +1,11 @@
-from sense_hat import SenseHat
+#from sense_hat import SenseHat
+from sense_emu import SenseHat
 #import logging
 import time
 
 
 s = SenseHat()
-s.low_light = True
+s.low_light = False
 
 green = (0, 255, 0)
 yellow = (255, 255, 0)

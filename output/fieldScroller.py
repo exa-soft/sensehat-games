@@ -1,57 +1,27 @@
-from sense_hat import SenseHat
+#from sense_hat import SenseHat
+from sense_emu import SenseHat
 #import logging
 import time
-from pixelUtils import *
-from ../exeption import DataError
+from . import displayUtils
+from exceptions import DataError
 
 """The fieldScroller will take the current SenseHAT display and a
 second 8x8 fields (as array of 64 elements) and implement a scroll
 movement from the current display to the new one. The direction for
 the scroll movement can be selected (up, down, left, right).
-To mark the screen change operations, all screens are first displayed
-with a border which shrinks a bit, then the scroll is done to the new
-screen, which is displayed with a shrinked border first, then that
-border is expanded and disappears.
-There are also functions to display that there is no next screen. They
-display the same shrinking border, but then mark the edge of the
-missing next screen with a colored bar, then expand the border again,
-without scrolling.
-
-This library also exposes functions that convert a SenseHAT screen
-(64-element array) to an array of rows or of columns.
+To mark the scroll operations, all screens are first displayed with
+a border which shrinks a bit, then the scroll is done to the new screen,
+which is displayed with a shrinked border first, then that border is
+expanded and disappears.
 """
 
-def black = (0, 0, 0)
-def default_borderColor = (120, 120, 120)
+black = (0, 0, 0)
 
 
-def goto_screen_below (sense, newScreen, borderColor = default_borderColor):
-    """Scrolls the display up, the new screen appears from below.
-    """
-    _goto_screen_vertical (sense, newScreen, borderColor, False)   # False = go down
-
-
-def goto_screen_above (sense, newScreen, borderColor = default_borderColor):
-    """Scrolls the display down, the new screen appears from top.
-    """
-    _goto_screen_vertical (sense, newScreen, borderColor, True)   # True = go up
-
-
-def goto_screen_left (sense, newScreen, borderColor = default_borderColor):
-    """Scrolls the display right, the new screen appears from the left.
-    """
-    _goto_screen_horizontal (sense, newScreen, borderColor, False)   # False = go left
-
-
-def goto_screen_right (sense, newScreen, borderColor = default_borderColor):
-    """Scrolls the display left, the new screen appears from right.
-    """
-    _goto_screen_horizontal (sense, newScreen, borderColor, True)   # True = go right
-
-
-dev _goto_screen (sense, newScreen, borderColor, isVertical, isUpOrRight):
-    """Scrolls the display vertically or horizontally (depending on
-    isVertical), where isUpOrRight defines the direction.
+def scrollUp (sense, newScreen, borderColor=(120, 120, 120), speed=.2):
+    """Scrolls the display up, such that the new screen appears from
+    bottom.
+    Speed is the waiting time between steps (drawing border etc.)
     """
 
     if len(newScreen) != 64:
@@ -59,50 +29,49 @@ dev _goto_screen (sense, newScreen, borderColor, isVertical, isUpOrRight):
 
     oldDisplay = sense.get_pixels()
 
-
-    # set the outer border to the existing screen
-    time.sleep(1)
+    time.sleep(speed)
     _draw_border1 (sense, borderColor)
+    # copy the array and add a border:
+    newWithBorder = newScreen[:]
+    print("newWithBorder: {}".format(newWithBorder))
+    
+    _add_border2 (newWithBorder, borderColor)  
+    newRows = displayUtils.screen2rows(newWithBorder, True)  # true = from top
+    #newRows = displayUtils.screen2rows(newScreen, True)  # true = from top
 
-    # copy the newScreen array and add a border (in memory)
-    newWithBorder = _add_border2 (newScreen[:], borderColor)
-
-    newLines = screen_to_rows (newWithBorder, isUpOrRight) if isVertical else screen_to_cols (newWithBorder, isUpOrRight)
-
-    # set the inner border to the existing screen (remove the outer)
-    time.sleep(1)
+    time.sleep(speed)
     _draw_border2 (sense, borderColor)
 
-    # scroll from existing screen to the one now in memory with border
-    time.sleep(1)
-    if isVertical:
-        scroll_vertical (sense, isUpOrRight, newLines)
-    else:
-        scroll_horizontal (sense, isUpOrRight, newLines)
+    time.sleep(speed)
+    displayUtils.scroll_vertical (sense, True, newRows)
 
-    # replace inner border with pixels from original new screen and paint outer border
+    time.sleep(speed)
     _undraw_border2 (sense, borderColor, newScreen)
 
-    # replace outer with pixels from original new screen
-    time.sleep(1)
-    _undraw_border1 (sense, borderColor, newScreen)
+    time.sleep(speed)
+    _undraw_border1 (sense, newScreen)
+    
 
-
-
-
-def screen_to_rows (screen):
-    return [screen[i*8 : i*8 + 7] for i in range(8)]
-
-
-def _add_border2 (screenData, color = default_borderColor):
+def _add_border2 (screenData, borderColor):
+    """Add a border as in _draw_border2, but do not add it on screen, 
+    but to the data in screenData instead"""
+        
+    # clear the outer border
+    for i in range(8):
+        screenData[i] = black       # 0*8 + i
+        screenData[56 + i] = black  # 7*8 + i
     for i in range(1, 7):
-        screenData[1, i] = color
-        screenData[6, i] = color
+        screenData[i*8] = black
+        screenData[i*8 + 7] = black
+
+    # data for the inner border    
+    for i in range(1, 7):
+        screenData[8 + i] = borderColor    # 1*8 + i
+        screenData[48 + i] = borderColor   # 6*8 + i
     for i in range(2, 6):
-        screenData[i, 1] = color
-        screenData[i, 6] = color
-
-
+        screenData[i*8 + 1] = borderColor
+        screenData[i*8 + 6] = borderColor
+    
 
 def _border_move_in (sense, color):
     """Adds a border moving in from the edge."""
@@ -232,6 +201,12 @@ def _undraw_border2 (sense, borderColor, screen):
         f.close()
     """
 
+
+green = (0, 255, 0)
+yellow = (255, 255, 0)
+blue = (0, 0, 255)
+red = (255, 0, 0)
+nothing = (0,0,0)
 n = nothing
 a = yellow
 f = red
@@ -282,21 +257,6 @@ def test_addRemoveBorders(s, imageData):
     time.sleep(1)
     _border_move_out (s, color, imageData)
 
-def test_screen2Rows ():
-    testArray = [
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    ]
-    rows = screen_to_rows (testArray)
-    assert len(rows) == 8
-    for i in range(8):
-        print('row {} is: {}'.format(i, rows[i])
 
 
 if __name__ == "__main__":
@@ -304,7 +264,6 @@ if __name__ == "__main__":
     s = SenseHat()
     s.low_light = True
 
-    s.set_pixels (testImages[1])
+    s.set_pixels(testImages[1])
     test_drawUndrawBorders (s, testImages[1])
     test_addRemoveBorders (s, testImages[1])
-    test_screen2Rows ()

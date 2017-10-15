@@ -1,4 +1,5 @@
-from sense_hat import SenseHat
+from sense_emu import SenseHat
+#from sense_hat import SenseHat
 #import logging
 import time
 
@@ -48,7 +49,7 @@ testImages = [
 def init(i):
     s.set_pixels(testImages[i])
     
-def scrollVertical (sense, scrollUp, newRows):
+def scroll_vertical (sense, scrollUp, newRows):
     """Scroll the display of the given SenseHAT vertically up or down
     (defined by scrollUp: True/False) by the number of rows given in
     newRows. newRows must be an array of arrays that are each length 8.
@@ -66,24 +67,31 @@ def scrollVertical (sense, scrollUp, newRows):
         # then from the third-last to the second-last and so on
         for row in scrollRange:
             #time.sleep(0.1)
-            copyRow (sense, row + step, row)
+            copy_row (sense, row + step, row)
         #time.sleep(0.03)
-        appendRow (sense, appendIndex, newRows[newRowIndex])
+        append_row (sense, appendIndex, newRows[newRowIndex])
         time.sleep(0.1)
 
-def copyRow (sense, fromRow, toRow):
+def copy_row (sense, fromRow, toRow):
     # if the values can be read and written separately:
     print('copy row {} to {}'.format(fromRow, toRow))
     for i in range(8):
         v = sense.get_pixel(i, fromRow)
         sense.set_pixel(i, toRow, v)
 
-def appendRow (sense, toRow, newData):
+def append_row (sense, toRow, newData):
     print('appending newData to row {}'.format(toRow))
     #print('newData is {}'.format(newData))
     for i in range(8):
         color = newData[i]
         sense.set_pixel(i, toRow, color)
+
+def screen2rows (data, fromTop):
+    rowRange = range(8) if fromTop else range(8, 0)
+    return [data[i*8:(i+1)*8] for i in rowRange]
+    
+#def screen2cols (data):
+#    return [data]	
 
 def test():
     print ("in init")
@@ -99,8 +107,8 @@ if __name__ == "__main__":
         [b, f, b, n, n, n, n, n],
     ]
     for i in range(4):
-        scrollVertical(s, False, data)
+        scroll_vertical(s, False, data)
 
     time.sleep(2)
     for i in range(4):
-        scrollVertical(s, True, data)
+        scroll_vertical(s, True, data)
