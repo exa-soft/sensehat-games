@@ -15,7 +15,7 @@ which is displayed with a shrinked border first, then that border is
 expanded and disappears.
 """
 
-black = (0, 0, 0)
+_black = (0, 0, 0)
 
 
 def scrollUp (sense, newScreen, borderColor=(120, 120, 120), speed=.2):
@@ -33,11 +33,9 @@ def scrollUp (sense, newScreen, borderColor=(120, 120, 120), speed=.2):
     _draw_border1 (sense, borderColor)
     # copy the array and add a border:
     newWithBorder = newScreen[:]
-    print("newWithBorder: {}".format(newWithBorder))
     
     _add_border2 (newWithBorder, borderColor)  
     newRows = displayUtils.screen2rows(newWithBorder, True)  # true = from top
-    #newRows = displayUtils.screen2rows(newScreen, True)  # true = from top
 
     time.sleep(speed)
     _draw_border2 (sense, borderColor)
@@ -58,11 +56,11 @@ def _add_border2 (screenData, borderColor):
         
     # clear the outer border
     for i in range(8):
-        screenData[i] = black       # 0*8 + i
-        screenData[56 + i] = black  # 7*8 + i
+        screenData[i] = _black       # 0*8 + i
+        screenData[56 + i] = _black  # 7*8 + i
     for i in range(1, 7):
-        screenData[i*8] = black
-        screenData[i*8 + 7] = black
+        screenData[i*8] = _black
+        screenData[i*8 + 7] = _black
 
     # data for the inner border    
     for i in range(1, 7):
@@ -125,11 +123,11 @@ def _draw_border2 (sense, color):
 
     # then delete the outer border
     for i in range(8):
-        sense.set_pixel(0, i, black)
-        sense.set_pixel(7, i, black)
+        sense.set_pixel(0, i, _black)
+        sense.set_pixel(7, i, _black)
     for i in range(1, 7):
-        sense.set_pixel(i, 0, black)
-        sense.set_pixel(i, 7, black)
+        sense.set_pixel(i, 0, _black)
+        sense.set_pixel(i, 7, _black)
 
 
 def _get_pixel (screenData, x, y):
@@ -188,82 +186,3 @@ def _undraw_border2 (sense, borderColor, screen):
         pixel = _get_pixel (screen, i, 6)
         sense.set_pixel(i, 6, pixel)
 
-
-
-    """
-    for arg in sys.argv[1:]:
-    try:
-        f = open(arg, 'r')
-    except IOError:
-        print('cannot open', arg)
-    else:
-        print(arg, 'has', len(f.readlines()), 'lines')
-        f.close()
-    """
-
-
-green = (0, 255, 0)
-yellow = (255, 255, 0)
-blue = (0, 0, 255)
-red = (255, 0, 0)
-nothing = (0,0,0)
-n = nothing
-a = yellow
-f = red
-
-testImages = [
-    [
-    n, n, n, n, n, n, n, n,
-    n, n, n, n, n, n, n, n,
-    n, n, n, a, a, n, n, n,
-    n, n, a, a, a, a, n, n,
-    n, n, a, a, a, a, n, n,
-    n, n, n, a, a, n, n, n,
-    n, n, n, n, n, n, n, n,
-    n, n, n, n, n, n, n, n,
-    ],
-    [
-    f, a, n, n, n, n, n, n,
-    a, f, a, n, n, n, n, n,
-    n, a, f, a, n, n, n, n,
-    n, n, a, f, a, n, n, n,
-    n, n, n, a, f, a, n, n,
-    n, n, n, n, a, f, a, n,
-    n, n, n, n, n, a, f, a,
-    n, n, n, n, n, n, a, f,
-    ],
-]
-
-
-def test_drawUndrawBorders(s, imageData):
-    color = (255, 56, 0)
-
-    time.sleep(1)
-    _draw_border1 (s, color)
-    time.sleep(1)
-    _draw_border2 (s, color)
-
-    time.sleep(1)
-    _undraw_border2 (s, color, imageData)
-    time.sleep(1)
-    _undraw_border1 (s, imageData)
-
-
-def test_addRemoveBorders(s, imageData):
-    color = (56, 255, 0)
-
-    time.sleep(1)
-    _border_move_in (s, color)
-    time.sleep(1)
-    _border_move_out (s, color, imageData)
-
-
-
-if __name__ == "__main__":
-
-    s = SenseHat()
-    s.low_light = True
-
-    s.set_pixels(testImages[1])
-    test_drawUndrawBorders (s, testImages[1])
-    test_addRemoveBorders (s, testImages[1])
