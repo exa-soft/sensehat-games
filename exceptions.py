@@ -14,3 +14,18 @@ class DataError(Error):
     def __init__(self, data, message):
         self.data = data
         self.message = message
+
+
+
+class ArgumentError(Error):
+    """Exception raised when an argument is invalid.
+
+    Attributes:
+        arg -- argument that is invalid
+        message -- explanation of the error
+    """
+
+    def __init__(self, arg, message):
+        self.arg = arg
+        self.message = message
+
