@@ -46,10 +46,16 @@ def testAll():
     s.low_light = False
     s.set_pixels(testImages[0])
 
-    fieldScroller.scrollUp (s, testImages[1], borderColor=blue, speed=.2)
+    fieldScroller.scrollUp (s, testImages[1], borderColors=(blue, green), speed=.5)
 
-#    time.sleep(1)
-#    fieldScroller.scrollDown (s, testImages[0], borderColor=yellow, speed=.5)
+    time.sleep(1)
+    fieldScroller.scrollDown (s, testImages[0], (green, blue), speed=.3)
+
+    time.sleep(1)
+    fieldScroller.scrollLeft (s, testImages[1], (red, green), speed=.2)
+
+    time.sleep(1)
+    fieldScroller.scrollRight (s, testImages[0], (green, red), speed=.1)
 
 
 if __name__ == "__main__":

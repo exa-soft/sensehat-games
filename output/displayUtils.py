@@ -54,7 +54,6 @@ def copy_row (sense, fromRow, toRow):
     """Copy a row from the SenseHAT display to another row.
     fromRow and toRow are row indices (0..7)
     """
-    #print('copy row {} to {}'.format(fromRow, toRow))
     for i in range(8):
         sense.set_pixel(i, toRow, sense.get_pixel(i, fromRow))
 
@@ -63,7 +62,6 @@ def copy_col (sense, fromCol, toCol):
     """Copy a column from the SenseHAT display to another column.
     fromCol and toCol are column indices (0..7)
     """
-    #print('copy col {} to {}'.format(fromCol, toCol))
     for i in range(8):
         sense.set_pixel(toCol, i, sense.get_pixel(fromCol, i))
 
@@ -74,7 +72,6 @@ def append_row (sense, toRow, newData):
     toRow must be a row index (0..7).
     newData must be an 8 element array with color tuples.
     """
-    #print('appending newData to row {}'.format(toRow))
     for i in range(8):
         sense.set_pixel(i, toRow, newData[i])
 
@@ -85,7 +82,6 @@ def append_col (sense, toCol, newData):
     toCol must be a row index (0..7).
     newData must be an 8 element array with color tuples.
     """
-    #print('appending newData to column {}'.format(toCol))
     for i in range(8):
         sense.set_pixel(toCol, i, newData[i])
 
@@ -95,7 +91,7 @@ def screen2rows (data, fromTop):
     to an array of rows (8 elements with 8 elements each).
     fromTop defines if element 0 is topmost or bottommost row.
     """
-    rowRange = range(8) if fromTop else range(8, 0)
+    rowRange = range(8) if fromTop else range(7, -1, -1)
     return [data[y*8:(y+1)*8] for y in rowRange]
 
 
