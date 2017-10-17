@@ -4,7 +4,7 @@
 from sense_emu import SenseHat
 import logging
 import time
-from exceptions import ArgumentError
+from . import exceptions
 from output import fieldScroller
 
 
@@ -14,18 +14,22 @@ class GameWindow (object):
     - _init_game()
     - get_name()
     - get_border_color()
+    - _start_game()
+    - _continue_game()
     - is_solved()
+    Optionally, subclasses can overwrite:
+    - stop_game()
     """
 
 
     def __init__ (self, name):
         """Init the game window.
         
-        - senseHat: sense
         - name: the name of the window (maybe displayed on start 
           or help request)
         """
         self.name = name
+        self.isStarted = False
         self.sense = SenseHat()
         self._init_game()
 
@@ -54,6 +58,43 @@ class GameWindow (object):
         return (120, 120, 120)
         # should be overwritten by subclasses 
 
+
+    def resume_game (self):
+        """Starts or continues playing the game: If it has not yet 
+        been started, _start_game() is called. Otherwise, if it is 
+        not yet solved, _continue_game() is called. 
+        Otherwise, nothing happens."""
+        if self.is_solved ():
+            logging.info('resume_game {}: already solved'.format(self.name))
+        elif self.isStarted:
+            logging.info('resume_game {}: continue game'.format(self.name))
+            self._continue_game()
+        else:
+            logging.info('resume_game {}: start game'.format(self.name))
+            self.isStarted = True
+            self._start_game()
+
+
+    def _start_game (self):
+        """Start the game. Will be called when resume_game() is 
+        called for the first time."""
+        pass
+        # should be overwritten by subclasses 
+
+
+    def _continue_game (self):
+        """Continue the game. Will be called when resume_game() is 
+        called not for the first time, but the game is not yet solved."""
+        pass
+        # should be overwritten by subclasses 
+
+
+    def stop_game (self):
+        """Do some saving or cleanup (if necessary) before leaving the
+        game. Subclasses can overwrite if necessary."""
+        pass
+        # can be overwritten by subclasses 
+        
 
     def is_solved (self):
         """Return true if the game is solved"""
@@ -106,6 +147,14 @@ class GameWindowGrid (object):
         self.games[x][y] = game
 
 
+    def start (self):
+        """Start: after all the games have been initialized, call this
+        method to start the first game (the one at position 0,0). 
+        """
+        nextGame = get_game (self.posX, self.posY)
+        nextGame.resume_game ()
+        
+
     def get_game (self, x, y):
         """ Return the game at the position x, y"""
         if x >= self.width:
@@ -123,11 +172,15 @@ class GameWindowGrid (object):
         if self.posY == 0:
             return False
         else:
+            thisGame = get_game (self.posX, self.posY) 
+            thisGame.stop_game ()
+            
             self.position.y -= 1
             nextGame = get_game (self.posX, self.posY)
             data = nextGame.get_data ()
             color = nextGame.get_border_color ()
             fieldScroller.scrollUp (self.sense, data, color)
+            nextGame.resume_game ()
 
 
     def go_down (self):
@@ -137,11 +190,16 @@ class GameWindowGrid (object):
         if self.posY == self.height - 1:
             return False
         else:
+            thisGame = get_game (self.posX, self.posY) 
+            thisGame.stop_game ()
+            
             self.posY += 1
             nextGame = get_game (self.posX, self.posY)
             data = nextGame.get_data ()
             color = nextGame.get_border_color ()
             fieldScroller.scrollDown (self.sense, data, color)
+            nextGame.resume_game ()
+
 
     #TODO go_left, go_right            
 

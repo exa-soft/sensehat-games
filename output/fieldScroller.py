@@ -3,7 +3,7 @@ from sense_emu import SenseHat
 #import logging
 import time
 from . import displayUtils
-from exceptions import DataError
+from .exceptions import DataError
 
 """The fieldScroller will take the current SenseHAT display and a
 second 8x8 fields (as array of 64 elements) and implement a scroll
