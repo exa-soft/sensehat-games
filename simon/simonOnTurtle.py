@@ -1,8 +1,6 @@
 import logging
-from cores.simonsays import SimonSays
-#import cores.simonsays as ss
-
-from output.simonTurtle import SimonTurtle
+from .simonsays import SimonSays
+from .simonTurtle import SimonTurtle
 
 
 # situ.init()
@@ -64,7 +62,7 @@ class SimonOnTurtle(SimonSays, SimonTurtle):
         SimonSays.hearColor(self, colorNum)
 
 
-def test():
+def _test():
     tusi = SimonOnTurtle(3)
     #tusi = ss.SimonSays(4)
     #logging.info ("state: ", tusi.state)
@@ -72,5 +70,7 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
+    pass
+    # _test()   # does not work from main because of relative imports.
+    # start tst by with calling _test() manually
 

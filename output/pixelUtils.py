@@ -1,9 +1,55 @@
 #from sense_hat import SenseHat
-import logging
+from sense_emu import SenseHat
+#import logging
 import time
 
 
-def scrollVertical (sense, scrollUp, newRows):
+s = SenseHat()
+s.low_light = False
+
+green = (0, 255, 0)
+yellow = (255, 255, 0)
+blue = (0, 0, 255)
+red = (255, 0, 0)
+nothing = (0,0,0)
+
+n = nothing
+a = yellow
+b = (255, 153, 0)
+c = (255, 51, 0)
+d = (255, 35, 0)
+e = (255, 15, 0)
+f = red
+g = (102, 0, 0)
+h = (51, 0, 0)
+
+testImages = [
+    [
+    n, n, n, n, n, n, n, n,
+    n, n, n, n, n, n, n, n,
+    n, n, n, a, a, n, n, n,
+    n, n, a, a, a, a, n, n,
+    n, n, a, a, a, a, n, n,
+    n, n, n, a, a, n, n, n,
+    n, n, n, n, n, n, n, n,
+    n, n, n, n, n, n, n, n,
+    ],
+    [
+    f, a, n, n, n, n, n, n,
+    a, f, a, n, n, n, n, n,
+    n, a, f, a, n, n, n, n,
+    n, n, a, f, a, n, n, n,
+    n, n, n, a, f, a, n, n,
+    n, n, n, n, a, f, a, n,
+    n, n, n, n, n, a, f, a,
+    n, n, n, n, n, n, a, f,
+    ],
+]
+
+def init(i):
+    s.set_pixels(testImages[i])
+
+def scroll_vertical (sense, scrollUp, newRows):
     """Scroll the display of the given SenseHAT vertically up or down
     (defined by scrollUp: True/False) by the number of rows given in
     newRows. newRows must be an array of arrays that are each length 8.
@@ -12,71 +58,50 @@ def scrollVertical (sense, scrollUp, newRows):
     up, and at the top when scrolling down).
     """
 
-    scrollRange = range(0, 7) if scrollUp else range(7, 0)
+    scrollRange = range(0, 7) if scrollUp else range(7, 0, -1)
     step = 1 if scrollUp else -1
     appendIndex = 7 if scrollUp else 0
 
-    print('scrollRange {}, step {}, appendIndex {}'.format(scrollRange, step, appendIndex))
-
     for newRowIndex in range(0, len(newRows)):
-        print('scrolling for new row {}: {}'.format(newRowIndex, newRows[newRowIndex]))
         # copy the information from the second-last row to the last row,
         # then from the third-last to the second-last and so on
         for row in scrollRange:
-            copyRow (sense, row + step, row)
-            print('copied to row {}'.format(row))
-        appendRow (sense, appendIndex, newRows[newRowIndex])
+            #time.sleep(0.1)
+            _copyRow (sense, row + step, row)
+        #time.sleep(0.03)
+        _appendRow (sense, appendIndex, newRows[newRowIndex])
+        time.sleep(0.1)
 
-"""
-        else:
-            print('scrolling for new row {}: {}'.format(newRowIndex, newRows[newRowIndex]))
-            # copy the information from the second-last row to the last row,
-            # then from the third-last to the second-last and so on
-            for row in range(7, 0):
-                copyRow (sense, row - 1, row)
-                print('copied to row {}'.format(row))
-            appendRow (sense, 7, newRows[newRowIndex])
-            print ('row is {}'.format(row))
-"""
-
-def copyRow (sense, fromRow, toRow):
-    rowToCopy = sense[fromRow]
-    sense.pop(toRow)
-    sense.insert(toRow, rowToCopy)
+def _copyRow (sense, fromRow, toRow):
     # if the values can be read and written separately:
-    # for i in range(8):
-    #    v = sense.get(i, fromRow)
-    #    sense.set(i, toRow, v)
-
-def appendRow (sense, toRow, rowData):
-    sense.pop(toRow)
-    sense.insert(toRow, rowData)
-    # if the values can be read and written separately:
-    #for i in range(8):
-    #    sense.set(i, toRow, rowData[i])
-
-def printSense (sense):
+    print('copy row {} to {}'.format(fromRow, toRow))
     for i in range(8):
-        print(sense[i])
+        v = sense.get_pixel(i, fromRow)
+        sense.set_pixel(i, toRow, v)
 
-def initSense():
-    s = [
-        list('aabccbba'),
-        list('bbcddcbb'),
-        list('bcdeedcb'),
-        list('cdeffedc'),
-        list('cdeffedc'),
-        list('bcdeedcb'),
-        list('bbcddcbb'),
-        list('abbccbaa')
-    ]
-    return s
+def _appendRow (sense, toRow, newData):
+    print('appending newData to row {}'.format(toRow))
+    #print('newData is {}'.format(newData))
+    for i in range(8):
+        color = newData[i]
+        sense.set_pixel(i, toRow, color)
 
 def test():
     print ("in init")
-    cnt.state()
 
 
 if __name__ == "__main__":
-    a = initSense()
-    #test()
+    a = init(1)
+    time.sleep(1)
+    data = [
+        [n, n, n, b, f, b, n, n],
+        [n, n, b, f, b, n, n, n],
+        [n, b, f, b, n, n, n, n],
+        [b, f, b, n, n, n, n, n],
+    ]
+    for i in range(4):
+        scroll_vertical(s, False, data)
+
+    time.sleep(2)
+    for i in range(4):
+        scroll_vertical(s, True, data)

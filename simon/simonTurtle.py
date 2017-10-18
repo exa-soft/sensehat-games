@@ -164,7 +164,7 @@ class SimonTurtle(object):
         return 'SimonTurtle (curPos {sf.curPos}, isTopRow {sf.isTopRow})'.format(sf=self)
 
 
-if __name__ == "__main__":
+def _test():
 
     # logging.basicConfig(level=logging.DEBUG,
     #                format='%(asctime)s %(levelname)s %(message)s',
@@ -179,4 +179,9 @@ if __name__ == "__main__":
     st.showColorAndMove(3)
     st.showColorAndMove(1)
     st.startListening()
+
+
+if __name__ == "__main__":
+    
+    _test()
 

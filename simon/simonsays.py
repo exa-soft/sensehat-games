@@ -136,7 +136,7 @@ class SimonSays(object):
         return 'SimonSays (final length {sf.size}, current length {sf.curLen}, solution {sf.solution})'.format(sf=self)
 
 
-def test(testlen):
+def _testAuto(testlen):
 
     simon = SimonSays(testlen)
     print('[testout]', simon)
@@ -151,7 +151,11 @@ def test(testlen):
             simon.hearColor(simon.solution[i])
             print('[testout] state: ', simon.state)
 
+
+def _test():
+    _testAuto(3)
+
+
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
-    test(3)
-
+    _test()
