@@ -2,15 +2,16 @@
 
 #from sense_hat import SenseHat
 from sense_emu import SenseHat
-from cores.game import GameWindow, GameWindowGrid
 import logging
 #import time
+from .game import GameWindow, GameWindowGrid
 #from exceptions import ArgumentError
 
 def simple_test():
     """only 2 games* top and bottom"""
     
     grid = GameWindowGrid (1, 2)
+    logging.debug (grid.games)
     game1 = GameWindow('Top-Above')
     game2 = GameWindow('Bottom-Below')
     
@@ -18,6 +19,9 @@ def simple_test():
     grid.set_game (0, 1, game2)
     grid.start ()
 
+
+def _test():
+    simpleTest()
 
 
 if __name__ == "__main__":

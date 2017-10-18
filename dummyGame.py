@@ -4,7 +4,7 @@
 from sense_emu import SenseHat
 import logging
 import time
-from game import GameWindow
+import game.GameWindow
 #from exceptions import ArgumentError
 #from output import fieldScroller
 
@@ -59,6 +59,10 @@ class DummyGame (GameWindow):
         # should be overwritten by subclasses 
                
 
+def _test():
+    game = DummyGame ('tstgame')
+    game.resume_game ()
+    
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)

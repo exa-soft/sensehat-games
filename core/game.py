@@ -5,9 +5,9 @@ from sense_emu import SenseHat
 import logging
 import time
 from . import exceptions
-from output import fieldScroller
+from ..output import fieldScroller
 
-
+    
 class GameWindow (object):
     """Base class for a game that is in a "window" (one SenseHAT screen).
     Subclasses should overwrite:
@@ -246,7 +246,9 @@ def _test ():
                 # Wait a while and then clear the screen
                 time.sleep(0.5)
                 sense.clear()
-
+            else:
+                print ("other event")
+    
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)

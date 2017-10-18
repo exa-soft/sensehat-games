@@ -257,3 +257,61 @@ def _undraw_border2 (senseHat, borderColor, screen):
         pixel = _get_pixel (screen, i, 6)
         senseHat.set_pixel(i, 6, pixel)
 
+
+_green = (0, 255, 0)
+_blue = (0, 0, 255)
+_red = (255, 0, 0)
+
+_n = (0, 0, 0)   # nothing
+_a = (255, 255, 0)   # yellow
+_f = _red
+
+testImages = [
+    [
+    _n, _n, _n, _n, _n, _n, _n, _n, 
+    _n, _n, _n, _n, _n, _n, _n, _n, 
+    _n, _n, _n, _a, _a, _n, _n, _n, 
+    _n, _n, _a, _a, _a, _a, _n, _n, 
+    _n, _n, _a, _a, _a, _a, _n, _n, 
+    _n, _n, _n, _a, _a, _n, _n, _n, 
+    _n, _n, _n, _n, _n, _n, _n, _n, 
+    _n, _n, _n, _n, _n, _n, _n, _n, 
+    ],
+    [
+    _f, _a, _n, _n, _n, _n, _n, _n, 
+    _a, _f, _a, _n, _n, _n, _n, _n, 
+    _n, _a, _f, _a, _n, _n, _n, _n,
+    _n, _n, _a, _f, _a, _n, _n, _n,
+    _n, _n, _n, _a, _f, _a, _n, _n,
+    _n, _n, _n, _n, _a, _f, _a, _n,
+    _n, _n, _n, _n, _n, _a, _f, _a,
+    _n, _n, _n, _n, _n, _n, _a, _f, 
+    ],
+]
+
+
+def _testAll():
+    """Call for testing and watch on SenseHAT 
+    (real or emulator, depending on import)"""
+
+    s = SenseHat()
+    s.low_light = False
+    s.set_pixels(testImages[0])
+
+    scrollUp (s, testImages[1], borderColors=(_blue, _green), speed=.5)
+
+    time.sleep(1)
+    scrollDown (s, testImages[0], (_green, _blue), speed=.3)
+
+    time.sleep(1)
+    scrollLeft (s, testImages[1], (_red, _green), speed=.2)
+
+    time.sleep(1)
+    scrollRight (s, testImages[0], (_green, _red), speed=.3)
+
+
+if __name__ == "__main__":
+    pass
+    #_testAll()    # does not work because of relative imports
+
+
