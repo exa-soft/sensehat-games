@@ -18,7 +18,8 @@ class GameWindow (object):
     - _continue_game()
     - is_solved()
     Optionally, subclasses can overwrite:
-    - stop_game()
+    - _pause_game()
+    - get_screen()
     """
 
 
@@ -30,6 +31,7 @@ class GameWindow (object):
         """
         self.name = name
         self.isStarted = False
+        self.savedScreen = None
         self.sense = SenseHat()
         self._init_game()
 
@@ -47,20 +49,25 @@ class GameWindow (object):
 
 
     def get_screen (self):
-        """ Return the data for the (current) display of the game."""
-        return (96, 96, 96) * 64
-        # should be overwritten by subclasses 
+        """Get the screen for restoring the game (a 64-element array of 
+        color tuples). The default implementation returns the screen 
+        stored in leave_game(), and a black screen for the very first 
+        call of this game window. For other displays on restore, 
+        subclasses can overwrite this method."""
+        return self.savedScreen if self.savedScreen != None else ([0, 0, 0] * 64)
+        # can be overwritten by subclasses 
         
 
     def get_border_color (self):
         """ Color for the border (used when scrolling), can serve to 
         easier identify the game"""
-        return (120, 120, 120)
+        return [120, 120, 120]
         # should be overwritten by subclasses 
 
 
     def resume_game (self):
-        """Starts or continues playing the game: If it has not yet 
+        """Starts or continues playing the game (after calling 
+        get_screen and scrolling to the game window): If it has not yet 
         been started, _start_game() is called. Otherwise, if it is 
         not yet solved, _continue_game() is called. 
         Otherwise, nothing happens."""
@@ -89,11 +96,28 @@ class GameWindow (object):
         # should be overwritten by subclasses 
 
 
-    def stop_game (self):
-        """Do some saving or cleanup (if necessary) before leaving the
-        game. Subclasses can overwrite if necessary."""
+    def _pause_game (self):
+        """If necessary, the subclass can do here some saving or 
+        cleanup before leaving the game. Will be called in leave_game(). 
+        Saving and restoring the current screen is already done in 
+        leave_game() and get_screen()."""
         pass
         # can be overwritten by subclasses 
+
+
+    def leave_game (self):
+        """Before leaving the game, the screen will be saved. 
+        Subclasses should overwrite _pause_game() if they need to do
+        some saving or cleanup before leaving the game."""
+        logging.debug('leave game')
+        self._save_screen ()
+        self._pause_game ()
+        
+        
+    def _save_screen (self):
+        """Save the screen before leaving the game."""
+        self.savedScreen = self.sense.get_pixels()
+        logging.debug('saved screen (len: {}): {}'.format(len(self.savedScreen), self.savedScreen))
         
 
     def is_solved (self):
