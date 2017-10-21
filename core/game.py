@@ -1,4 +1,9 @@
-# basic game "window" and"window collection" module
+"""This module contains the core of this collection of SenseHAT games: 
+a "window" (containing one game that runs on the SenseHAT screen) and a 
+"window collection", which is an imaginary rectangle of several 
+"windows", each with its game, so the user can move from one to another 
+by using the joystick. The whole can be used to implement games like
+"Keep talking and nobody explodes"."""
 
 #from sense_hat import SenseHat
 from sense_emu import SenseHat
@@ -10,40 +15,49 @@ from ..output import fieldScroller
     
 class GameWindow (object):
     """Base class for a game that is in a "window" (one SenseHAT screen).
-    Subclasses should overwrite:
-    - _init_game()
+    Subclasses must overwrite:
+    - init_game()
     - get_name()
-    - get_border_color()
-    - _start_game()
-    - _continue_game()
+    - start_game()
+    - play_1step()
     - is_solved()
+    
     Optionally, subclasses can overwrite:
-    - _pause_game()
+    - pause_game()
+    - continue_game()
     - get_screen()
+    - get_border_color()
+    
+    Note that a game in GameWindow cannot use the joystick events 
+    up/down/left/right, because they are already used to "scroll" from 
+    one GameWindow ot its neighbours. However, a game in GameWindow can 
+    use the middle button of the joystick. 
     """
 
 
     def __init__ (self, name):
         """Init the game window.
         
-        - name: the name of the window (maybe displayed on start 
-          or help request)
+        - name: the name of the window (maybe displayed on start or 
+                in get_name())
         """
         self.name = name
         self.isStarted = False
         self.savedScreen = None
         self.sense = SenseHat()
-        self._init_game()
+        self.init_game()
 
  
-    def _init_game (self):
-        """Init game"""
-        logging.debug('_init_game')
+    def init_game (self):
+        """Init game.
+        Subclasses should overwrite this method."""
+        logging.debug('init_game')
         # should be overwritten by subclasses 
 
 
     def get_name (self):
-        """ Return the name of the game"""
+        """ Return the name of the game.
+        Subclasses should overwrite this method."""
         return "(no name set - overwrite method 'get_name')"
         # should be overwritten by subclasses 
 
@@ -60,7 +74,8 @@ class GameWindow (object):
 
     def get_border_color (self):
         """ Color for the border (used when scrolling), can serve to 
-        easier identify the game"""
+        easier identify the game. 
+        Subclasses should overwrite this method."""
         return [120, 120, 120]
         # should be overwritten by subclasses 
 
@@ -68,50 +83,56 @@ class GameWindow (object):
     def resume_game (self):
         """Starts or continues playing the game (after calling 
         get_screen and scrolling to the game window): If it has not yet 
-        been started, _start_game() is called. Otherwise, if it is 
-        not yet solved, _continue_game() is called. 
+        been started, start_game() is called. Otherwise, if it is 
+        not yet solved, continue_game() is called. 
         Otherwise, nothing happens."""
         if self.is_solved ():
             logging.info('resume_game {}: already solved'.format(self.name))
+            return
         elif self.isStarted:
             logging.info('resume_game {}: continue game'.format(self.name))
-            self._continue_game()
+            self.continue_game()
         else:
             logging.info('resume_game {}: start game'.format(self.name))
             self.isStarted = True
-            self._start_game()
+            self.start_game()
 
 
-    def _start_game (self):
+    def start_game (self):
         """Start the game. Will be called when resume_game() is 
-        called for the first time."""
+        called for the first time. 
+        Subclasses should overwrite this method."""
         pass
         # should be overwritten by subclasses 
 
 
-    def _continue_game (self):
+    def continue_game (self):
         """Continue the game. Will be called when resume_game() is 
-        called not for the first time, but the game is not yet solved."""
+        called not for the first time, but the game is not yet solved.
+        Subclassed can do things that are necessary when resuming a 
+        game from the hidden status. (Restoring the screen has already
+        been done as part of the scrolling back to the game.)"""
         pass
-        # should be overwritten by subclasses 
+        # can be overwritten by subclasses 
 
 
-    def _pause_game (self):
+    def pause_game (self):
         """If necessary, the subclass can do here some saving or 
         cleanup before leaving the game. Will be called in leave_game(). 
-        Saving and restoring the current screen is already done in 
-        leave_game() and get_screen()."""
+        However, saving and restoring the current screen is already 
+        taken care of (will be done in leave_game() and get_screen(), 
+        as part of the scrolling operation)."""
         pass
         # can be overwritten by subclasses 
 
 
     def leave_game (self):
         """Before leaving the game, the screen will be saved. 
-        Subclasses should overwrite _pause_game() if they need to do
+        Subclasses should overwrite pause_game() if they need to do
         some saving or cleanup before leaving the game."""
         logging.debug('leave game')
         self._save_screen ()
-        self._pause_game ()
+        self.pause_game ()
         
         
     def _save_screen (self):
@@ -121,9 +142,16 @@ class GameWindow (object):
         
 
     def is_solved (self):
-        """Return true if the game is solved"""
+        """Return true if the game is solved.
+        Subclasses should overwrite this method."""
         return False
         # should be overwritten by subclasses 
+        
+        
+    def play_1step (self):
+        """Here the game can check user input and react to it. 
+        Subclasses must overwrite this method."""
+        logging.info ('no game implemented! Overwrite play_1step()')
         
 
     def fail (self):
@@ -177,6 +205,65 @@ class GameWindowGrid (object):
         """
         nextGame = get_game (self.posX, self.posY)
         nextGame.resume_game ()
+        self.play ()
+
+        
+    def play (self):
+        """The main game loop. 
+        It will listen for and handle joystick events (only 
+        up/down and left/right) and then call play_1step() of the 
+        current game.
+        """
+        logging.info ('not yet implemented! ')
+#        while True:
+            #for event in​ sense.stick.get_events():
+#print( event.direction )
+#print( event.action )
+ 
+ """
+ from sense_hat import SenseHat, ACTION_PRESSED, ACTION_HELD, ACTION_RELEASED
+from signal import pause
+
+x = 3
+y = 3
+sense = SenseHat()
+
+def clamp(value, min_value=0, max_value=7):
+    return min(max_value, max(min_value, value))
+
+def pushed_up(event):
+    global y
+    if event.action != ACTION_RELEASED:
+        y = clamp(y - 1)
+
+def pushed_down(event):
+    global y
+    if event.action != ACTION_RELEASED:
+        y = clamp(y + 1)
+
+def pushed_left(event):
+    global x
+    if event.action != ACTION_RELEASED:
+        x = clamp(x - 1)
+
+def pushed_right(event):
+    global x
+    if event.action != ACTION_RELEASED:
+        x = clamp(x + 1)
+
+def refresh():
+    sense.clear()
+    sense.set_pixel(x, y, 255, 255, 255)
+
+sense.stick.direction_up = pushed_up
+sense.stick.direction_down = pushed_down
+sense.stick.direction_left = pushed_left
+sense.stick.direction_right = pushed_right
+sense.stick.direction_any = refresh
+refresh()
+pause()
+"""
+        
         
 
     def get_game (self, x, y):

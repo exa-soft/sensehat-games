@@ -1,4 +1,4 @@
-# counter in a GameWindow
+"""Dummy "game": a counter in a GameWindow."""
 
 #from sense_hat import SenseHat
 from sense_emu import SenseHat
@@ -16,7 +16,7 @@ class CounterDummyGame (GameWindow):
     """
 
  
-    def _init_game (self):
+    def init_game (self):
         """Init game: name must start with a digit."""
         num = int(self.name[0])
         if num < 0 or num > 10:
@@ -24,7 +24,7 @@ class CounterDummyGame (GameWindow):
         self.maxNum = num
         self.curNum = 0
         self.solved = False
-        logging.debug('_init_game, max is {}'.format(self.maxNum))
+        logging.debug('init_game, max is {}'.format(self.maxNum))
 
 
     def get_name (self):
@@ -39,13 +39,13 @@ class CounterDummyGame (GameWindow):
         return [numCol, numCol, numCol]
 
 
-    def _start_game (self):
+    def start_game (self):
         """Start the game. Will be called when resume_game() is 
         called for the first time."""
         self._display_number()
 
 
-    def _continue_game (self):
+    def continue_game (self):
         """Continue the game. Will be called when resume_game() is 
         called not for the first time, but the game is not yet solved."""
         time.sleep (1)
