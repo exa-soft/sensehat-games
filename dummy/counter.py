@@ -48,19 +48,25 @@ class CounterDummyGame (GameWindow):
     def continue_game (self):
         """Continue the game. Will be called when resume_game() is 
         called not for the first time, but the game is not yet solved."""
-        time.sleep (1)
-        self.curNum += 1
         self._display_number()
-        # TODO implement counter that continues conting until _pause_game is called
 
         
     def _display_number (self):
         self.sense.show_letter(str(self.curNum), text_colour=self.get_border_color(), back_colour=[0, 0, 0])
         
+        
+    def play (self):
+        """This "game" counts from 0 up to its maximal number."""
+        while True:
+            self._display_number ()
+            time.sleep(2)
+            if self.curNum < self.maxNum:
+                self.curNum += 1
+            
 
     def is_solved (self):
-        """Return true if the game is solved: if num is 9"""
-        return self.curNum == 9
+        """Return true if solved: i.e. if maxNum has been reached"""
+        return self.curNum == self.maxNum
                
 
 def _test ():

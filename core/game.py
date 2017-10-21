@@ -5,8 +5,8 @@ a "window" (containing one game that runs on the SenseHAT screen) and a
 by using the joystick. The whole can be used to implement games like
 "Keep talking and nobody explodes"."""
 
-#from sense_hat import SenseHat
-from sense_emu import SenseHat
+#from sense_hat import SenseHat, ACTION_PRESSED, ACTION_HELD, ACTION_RELEASED
+from sense_emu import SenseHat, ACTION_PRESSED, ACTION_HELD, ACTION_RELEASED
 import logging
 import time
 from . import exceptions
@@ -19,7 +19,7 @@ class GameWindow (object):
     - init_game()
     - get_name()
     - start_game()
-    - play_1step()
+    - play()
     - is_solved()
     
     Optionally, subclasses can overwrite:
@@ -96,6 +96,9 @@ class GameWindow (object):
             logging.info('resume_game {}: start game'.format(self.name))
             self.isStarted = True
             self.start_game()
+        
+        logging.info('resume_game {}: calling play()'.format(self.name))
+        self.play ()
 
 
     def start_game (self):
@@ -148,10 +151,11 @@ class GameWindow (object):
         # should be overwritten by subclasses 
         
         
-    def play_1step (self):
-        """Here the game can check user input and react to it. 
+    def play (self):
+        """Here the game will run, i.e. check for user input and react 
+        on it. 
         Subclasses must overwrite this method."""
-        logging.info ('no game implemented! Overwrite play_1step()')
+        logging.info ('no game implemented! Overwrite play()')
         
 
     def fail (self):
@@ -173,7 +177,7 @@ class GameWindowGrid (object):
     """
 
     def __init__ (self, width, height):
-        """Init the GameWindowCGrid. Each place of the grid must
+        """Init the GameWindowGrid. Each place of the grid must
         then be initialized with a game.
         
         - width: width of the games grid
