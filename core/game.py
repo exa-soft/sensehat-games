@@ -14,7 +14,6 @@ import time
 #from sense_hat import SenseHat, ACTION_PRESSED, ACTION_HELD, ACTION_RELEASED
 from sense_emu import SenseHat, ACTION_PRESSED, ACTION_HELD, ACTION_RELEASED
 from . import exceptions
-from ..output import fieldScroller
 
     
 class GameWindow(object):

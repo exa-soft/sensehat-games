@@ -6,7 +6,8 @@ to implement games like "Keep talking and nobody explodes".
 Usage:
 
 1. Change width and height of the grid, if necessary.
-2. Init each place of the grid with a game.  
+2. Init each place of the grid with a game (with set_game()).  
+3. Call start().  
 
 """
 
@@ -60,7 +61,7 @@ def start():
     play()
 
     
-def play(self):
+def play():
     """The main game loop.
      
     It will listen for and handle joystick events (only up/down and 
@@ -104,11 +105,11 @@ def go_up():
         nextGame = get_game(posX, posY)
         data = nextGame.get_data()
         color = nextGame.get_border_color()
-        fieldScroller.scrollUp(self.sense, data, color)
+        fieldScroller.scrollUp(data, color)
         nextGame.resume_game()
 
 
-def go_down(self):
+def go_down():
     """Move to the game below the current one, if possible.
     
     If possible, moves the current position down and returns True.  
@@ -127,7 +128,7 @@ def go_down(self):
         nextGame = get_game(posX, posY)
         data = nextGame.get_data()
         color = nextGame.get_border_color()
-        fieldScroller.scrollDown(sense, data, color)
+        fieldScroller.scrollDown(data, color)
         nextGame.resume_game()
 
 
