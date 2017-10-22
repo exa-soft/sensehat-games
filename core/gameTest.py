@@ -1,14 +1,18 @@
-# basic game "window" and"window collection" module
+"""Test for basic game "window" and"window collection" module."""
 
-#from sense_hat import SenseHat
-from sense_emu import SenseHat
+__author__ = 'Edith Birrer
+__version__ = '0.2'
+
+
 import logging
 #import time
+#from sense_hat import SenseHat
+from sense_emu import SenseHat
 from .game import GameWindow, GameWindowGrid
 #from exceptions import ArgumentError
 
 def simple_test():
-    """only 2 games* top and bottom"""
+    """only 2 games: top and bottom."""
     
     grid = GameWindowGrid (1, 2)
     logging.debug (grid.games)

@@ -1,3 +1,8 @@
+"""Exceptions for the games."""
+
+__author__ = 'Edith Birrer
+__version__ = '0.2'
+
 class Error(Exception):
     """Base class for exceptions in this module."""
     pass
@@ -14,7 +19,6 @@ class DataError(Error):
     def __init__(self, data, message):
         self.data = data
         self.message = message
-
 
 
 class ArgumentError(Error):

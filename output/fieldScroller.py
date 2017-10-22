@@ -1,10 +1,3 @@
-#from sense_hat import SenseHat
-from sense_emu import SenseHat
-#import logging
-import time
-from . import displayUtils
-from .exceptions import DataError
-
 """The fieldScroller will take the current SenseHAT display and a
 second 8x8 fields (as array of 64 elements) and implement a scroll
 movement from the current display to the new one. The direction for
@@ -13,7 +6,28 @@ To mark the scroll operations, all screens are first displayed with
 a border which shrinks a bit, then the scroll is done to the new screen,
 which is displayed with a shrinked border first, then that border is
 expanded and disappears.
+There is also a possiblity to show that a scroll movement in the 
+selected direction is not possible (like if there is no neughbour 
+screen on this side). In this case, the operation starts as usual with 
+a border that shrinks a bit, but then, the edge of the side where no 
+new window is available will be coloured (and no scroll operation 
+occurs), then the border expands and disappears as usual. These 
+operations are called tryScroll...().
 """
+
+__author__ = 'Edith Birrer
+__version__ = '0.2'
+
+
+#import logging
+import time
+#from sense_hat import SenseHat
+from sense_emu import SenseHat
+from . import displayUtils
+from .exceptions import DataError
+
+__version__ = '0.2'
+__author__ = 'Edith Birrer'
 
 _black = (0, 0, 0)
 defaultBorderColor = (120, 120, 120)
@@ -21,107 +35,110 @@ defaultBorderColors = (defaultBorderColor, defaultBorderColor)
 defaultSpeed = .2
 
 
-def scrollUp (senseHat, newScreen, borderColors=defaultBorderColors, speed=defaultSpeed):
+def scrollUp(senseHat, newScreen, borderColors=defaultBorderColors, 
+              speed=defaultSpeed):
     """Scrolls the display up, such that the new screen appears 
     from bottom.
+
+    - newScreen: data for the new screen (a list of 64 color tuples).
     
-    - borderColors are the colors of the borders pointed around the 
-      screens during scrolling: first element is around old screen (the 
-      one that is scrolled away), second element around new screen. 
+    - borderColors: colors of the borders pointed around the screens 
+      during scrolling: first element is around old screen (the one 
+      that is scrolled away), second element around new screen. 
       
     - speed is the waiting time between steps (drawing border etc.)
     """
     # True: scroll vertically. second boolean: direction (scroll up?)
-    _scroll (senseHat, newScreen, borderColors, speed, True, True)
+    _scroll(senseHat, newScreen, borderColors, speed, True, True)
     
 
-
-def scrollDown (senseHat, newScreen, borderColors=defaultBorderColors, speed=defaultSpeed):
+def scrollDown(senseHat, newScreen, borderColors=defaultBorderColors, 
+                speed=defaultSpeed):
     """Scrolls the display down, such that the new screen appears 
     from top.
     
-    - screen is the data for the new screen (an array with 64 color tuples).
-    
-    - borderColors are the colors of the borders pointed around the 
-      screens during scrolling: first element is around old screen (the 
-      one that is scrolled away), second element around new screen. 
-      
-    - speed is the waiting time between steps (drawing border etc.)
+    Parameters: see scrollUp().
     """
-    # True: scroll vertically. second boolean: direction (scroll up?)
-    _scroll (senseHat, newScreen, borderColors, speed, True, False)
+    # True: scroll vertic., second boolean: direction (scroll up?)
+    _scroll(senseHat, newScreen, borderColors, speed, True, False)
 
 
-def scrollLeft (senseHat, newScreen, borderColors=defaultBorderColors, speed=defaultSpeed):
+def scrollLeft(senseHat, newScreen, borderColors=defaultBorderColors, 
+                speed=defaultSpeed):
     """Scrolls the display left, such that the new screen appears 
     from right.
     
-    - borderColors are the colors of the borders pointed around the 
-      screens during scrolling: first element is around old screen (the 
-      one that is scrolled away), second element around new screen. 
-      
-    - speed is the waiting time between steps (drawing border etc.)
+    Parameters: see scrollUp().
     """
-    # False: scroll horizontally. second boolean: direction (scroll left?)
-    _scroll (senseHat, newScreen, borderColors, speed, False, True)
+    # False: scroll horiz., second boolean: direction (scroll left?)
+    _scroll(senseHat, newScreen, borderColors, speed, False, True)
 
 
-def scrollRight (senseHat, newScreen, borderColors=defaultBorderColors, speed=defaultSpeed):
+def scrollRight(senseHat, newScreen, borderColors=defaultBorderColors, 
+                 speed=defaultSpeed):
     """Scrolls the display right, such that the new screen appears 
     from left.
     
-    - borderColors are the colors of the borders pointed around the 
-      screens during scrolling: first element is around old screen (the 
-      one that is scrolled away), second element around new screen. 
-      
-    - speed is the waiting time between steps (drawing border etc.)
+    Parameters: see scrollUp().
     """
-    _scroll (senseHat, newScreen, borderColors, speed, False, False)
+    _scroll(senseHat, newScreen, borderColors, speed, False, False)
 
 
-
-def _scroll (senseHat, newScreen, borderColors, speed, vertical, upOrLeft):
+def _scroll(senseHat, newScreen, borderColors, speed, 
+             vertical, upOrLeft):
 
     if len(newScreen) != 64:
-        raise DataError (newScreen, "screen data must have 64 elements")
+        raise DataError(newScreen, 
+            "screen data must have 64 elements")
 
     if len(borderColors) != 2:
-        raise DataError (borderColors, "borderColors must have exactly 2 elements (colors)")
+        raise DataError(borderColors, 
+            "borderColors must have exactly 2 elements (colors)")
 
-    bColors = (borderColors, borderColors) if len(borderColors) == 1 else borderColors[0:2]
-    #oldDisplay = senseHat.get_pixels()
-
-    # draw a border along the edge
+    # add a border moving in from the edge to the second row/col
     time.sleep(speed)
-    _draw_border1 (senseHat, bColors[0])
-    
+    _border_move_in(senseHat, borderColors[0], speed)
+
     # (in memory) copy the new screen data and add a border
     newWithBorder = newScreen[:]
-    _add_border2 (newWithBorder, bColors[1])  
-
-    # move the border away from the edge to the second row/col
-    time.sleep(speed)
-    _draw_border2 (senseHat, bColors[0])
+    _add_border2(newWithBorder, borderColors[1])  
 
     # scroll from the current display to the one now in memory
     time.sleep(speed)
     if vertical:
         newRows = displayUtils.screen2rows(newWithBorder, upOrLeft)
-        displayUtils.scroll_vertical (senseHat, upOrLeft, newRows)
+        displayUtils.scroll_vertical(senseHat, upOrLeft, newRows)
     else:
         newCols = displayUtils.screen2rows(newWithBorder, upOrLeft)
-        displayUtils.scroll_horizontal (senseHat, upOrLeft, newCols)
+        displayUtils.scroll_horizontal(senseHat, upOrLeft, newCols)
 
-    # move the border from the second row/col towards the edge
+    # move the border towards the edge and then remove it
     time.sleep(speed)
-    _undraw_border2 (senseHat, bColors[1], newScreen)
+    _border_move_out(senseHat, borderColors[1], speed, newScreen)
     
-    # remove the border from the edge
+
+def _tryScroll(senseHat, borderColor, speed, vertical, upOrLeft):
+
+    # add a border moving in from the edge to the second row/col
     time.sleep(speed)
-    _undraw_border1 (senseHat, newScreen)
+    _border_move_in(senseHat, borderColors[0], speed)
 
+    # colour the edge of the selected tryScroll-direction
+    time.sleep(speed)
+    if vertical:
+        
+        _show_edge......newRows = displayUtils.screen2rows(newWithBorder, upOrLeft)
+        displayUtils.scroll_vertical(senseHat, upOrLeft, newRows)
+    else:
+        newCols = displayUtils.screen2rows(newWithBorder, upOrLeft)
+        displayUtils.scroll_horizontal(senseHat, upOrLeft, newCols)
 
-def _add_border2 (screenData, borderColor):
+    # move the border towards the edge and then remove it
+    time.sleep(speed)
+    _border_move_out(senseHat, borderColors[1], speed, newScreen)
+    
+
+def _add_border2(screenData, borderColor):
     """Add a border as in _draw_border2, but do not add it on screen, 
     but to the data in screenData instead"""
         
@@ -142,23 +159,21 @@ def _add_border2 (screenData, borderColor):
         screenData[i*8 + 6] = borderColor
     
 
-def _border_move_in (senseHat, color):
+def _border_move_in(senseHat, color, speed):
     """Adds a border moving in from the edge."""
-    _draw_border1 (senseHat, color)
-    time.sleep(0.05)
-    _draw_border2 (senseHat, color)
-    time.sleep(0.2)
+    _draw_border1(senseHat, color)
+    time.sleep(speed)
+    _draw_border2(senseHat, color)
 
 
-def  _border_move_out (senseHat, color, screen):
+def  _border_move_out(senseHat, color, speed, screen):
     """Removes the border by moving it towards the edge."""
-    _undraw_border2 (senseHat, color, screen)
-    time.sleep(0.05)
-    _undraw_border1 (senseHat, screen)
-    time.sleep(0.2)
+    _undraw_border2(senseHat, color, screen)
+    time.sleep(speed)
+    _undraw_border1(senseHat, screen)
 
 
-def _draw_border1 (senseHat, color):
+def _draw_border1(senseHat, color):
     """Draw a border around the display (along the edges).
 
     Parameters:
@@ -174,7 +189,7 @@ def _draw_border1 (senseHat, color):
         senseHat.set_pixel(i, 7, color)
 
 
-def _draw_border2 (senseHat, color):
+def _draw_border2(senseHat, color):
     """Draw a border inside the display: the pixels along the  edges
     are deleted (set to black), the second row of pixels is painted
     in the given color.
@@ -201,12 +216,12 @@ def _draw_border2 (senseHat, color):
         senseHat.set_pixel(i, 7, _black)
 
 
-def _get_pixel (screenData, x, y):
+def _get_pixel(screenData, x, y):
     index = y * 8 + x
     return screenData[index]
 
 
-def _undraw_border1 (senseHat, screen):
+def _undraw_border1(senseHat, screen):
     """Remove the border along the eges and replace it with data from
     screen.
 
@@ -217,18 +232,18 @@ def _undraw_border1 (senseHat, screen):
 
     # restore the outer border
     for i in range(8):
-        pixel = _get_pixel (screen, 0, i)
+        pixel = _get_pixel(screen, 0, i)
         senseHat.set_pixel(0, i, pixel)
-        pixel = _get_pixel (screen, 7, i)
+        pixel = _get_pixel(screen, 7, i)
         senseHat.set_pixel(7, i, pixel)
     for i in range(1, 7):
-        pixel = _get_pixel (screen, i, 0)
+        pixel = _get_pixel(screen, i, 0)
         senseHat.set_pixel(i, 0, pixel)
-        pixel = _get_pixel (screen, i, 7)
+        pixel = _get_pixel(screen, i, 7)
         senseHat.set_pixel(i, 7, pixel)
 
 
-def _undraw_border2 (senseHat, borderColor, screen):
+def _undraw_border2(senseHat, borderColor, screen):
     """Move the border from the second row to the row along the eges
     and replace the second row with data from screen.
 
@@ -247,14 +262,14 @@ def _undraw_border2 (senseHat, borderColor, screen):
 
     # then restore the inner border
     for i in range(1, 7):
-        pixel = _get_pixel (screen, 1, i)
+        pixel = _get_pixel(screen, 1, i)
         senseHat.set_pixel(1, i, pixel)
-        pixel = _get_pixel (screen, 6, i)
+        pixel = _get_pixel(screen, 6, i)
         senseHat.set_pixel(6, i, pixel)
     for i in range(2, 6):
-        pixel = _get_pixel (screen, i, 1)
+        pixel = _get_pixel(screen, i, 1)
         senseHat.set_pixel(i, 1, pixel)
-        pixel = _get_pixel (screen, i, 6)
+        pixel = _get_pixel(screen, i, 6)
         senseHat.set_pixel(i, 6, pixel)
 
 
@@ -298,16 +313,16 @@ def _testAll():
     s.low_light = False
     s.set_pixels(testImages[0])
 
-    scrollUp (s, testImages[1], borderColors=(_blue, _green), speed=.5)
+    scrollUp(s, testImages[1], borderColors=(_blue, _green), speed=.5)
 
     time.sleep(1)
-    scrollDown (s, testImages[0], (_green, _blue), speed=.3)
+    scrollDown(s, testImages[0], (_green, _blue), speed=.3)
 
     time.sleep(1)
-    scrollLeft (s, testImages[1], (_red, _green), speed=.2)
+    scrollLeft(s, testImages[1], (_red, _green), speed=.2)
 
     time.sleep(1)
-    scrollRight (s, testImages[0], (_green, _red), speed=.3)
+    scrollRight(s, testImages[0], (_green, _red), speed=.3)
 
 
 if __name__ == "__main__":

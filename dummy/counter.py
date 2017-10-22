@@ -1,5 +1,8 @@
 """Dummy "game": a counter in a GameWindow."""
 
+__author__ = 'Edith Birrer
+__version__ = '0.2'
+
 #from sense_hat import SenseHat
 from sense_emu import SenseHat
 import logging
@@ -34,20 +37,23 @@ class CounterDummyGame (GameWindow):
 
     def get_border_color (self):
         """ Color for the border (used when scrolling), can serve to 
-        easier identify the game"""
+        easier identify the game.
+        """
         numCol = 24 * (self.maxNum + 1)
         return [numCol, numCol, numCol]
 
 
     def start_game (self):
         """Start the game. Will be called when resume_game() is 
-        called for the first time."""
+        called for the first time.
+        """
         self._display_number()
 
 
     def continue_game (self):
         """Continue the game. Will be called when resume_game() is 
-        called not for the first time, but the game is not yet solved."""
+        called not for the first time, but the game is not yet solved.
+        """
         self._display_number()
 
         
