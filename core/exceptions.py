@@ -1,6 +1,6 @@
 """Exceptions for the games."""
 
-__author__ = 'Edith Birrer
+__author__ = 'Edith Birrer'
 __version__ = '0.2'
 
 class Error(Exception):

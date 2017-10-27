@@ -5,7 +5,7 @@ a "window" (containing one game that runs on the SenseHAT screen) and a
 by using the joystick. The whole can be used to implement games like
 "Keep talking and nobody explodes"."""
 
-__author__ = 'Edith Birrer
+__author__ = 'Edith Birrer'
 __version__ = '0.2'
 
 
@@ -49,8 +49,10 @@ class GameWindow(object):
         """
         self.gameId = gameId
         self.isStarted = False
+        self.isRunning = False
         self.savedScreen = None
         self.sense = SenseHat()
+        self.sense.low_light = False
         self.init_game()
  
     def init_game(self):
@@ -59,7 +61,7 @@ class GameWindow(object):
         Initialize the game logic.   
         Subclasses should overwrite this method.
         """
-        logging.debug('init_game')
+        logging.debug('init game {}'.format(self.gameId))
         # should be overwritten by subclasses 
 
     def get_name(self):
@@ -81,8 +83,7 @@ class GameWindow(object):
         call of this game window.  For other displays on restore, 
         subclasses can overwrite this method.
         """
-        return self.savedScreen if self.savedScreen is not None 
-            else ([0, 0, 0] * 64)
+        return self.savedScreen if self.savedScreen is not None else ([0, 0, 0] * 64)
         # can be overwritten by subclasses 
 
     def get_border_color(self):
@@ -107,20 +108,21 @@ class GameWindow(object):
         if self.is_solved():
             logging.info('resume_game {}: already solved'
                 .format(self.gameId))
-            return None
-        elif self.isStarted:
-            logging.info('resume_game {}: continue game'
-                .format(self.gameId))
-            self.continue_game()
         else:
-            logging.info('resume_game {}: start game'
+            if self.isStarted:
+                logging.info('resume_game {}: continue game'
+                    .format(self.gameId))
+                self.continue_game()
+            else:
+                logging.info('resume_game {}: start game'
+                    .format(self.gameId))
+                self.isStarted = True
+                self.start_game()
+        
+            logging.info('resume_game {}: calling play()'
                 .format(self.gameId))
-            self.isStarted = True
-            self.start_game()
-        logging.info('resume_game {}: calling play()'
-            .format(self.gameId))
-        self.play()
-        return None
+            self.isRunning = True
+            self.play()
 
     def start_game(self):
         """Start the game (for the first time).
@@ -138,8 +140,10 @@ class GameWindow(object):
         Continue the game. Will be called when resume_game() is 
         called not for the first time, but the game is not yet solved.
         Subclassed can do things that are necessary when resuming a 
-        game from the hidden status. (Restoring the screen has already
-        been done as part of the scrolling back to the game.)
+        game from the hidden status. Afterwards, play() will be called,
+        so continue_game() must not call play(). Also, when 
+        continue_game() is called, restoring the screen has already 
+        been done as part of the scrolling back to the game.
         """
         pass
         # can be overwritten by subclasses 
@@ -162,14 +166,15 @@ class GameWindow(object):
         Before leaving the game, the screen will be saved. 
         Subclasses should overwrite pause_game() if they need to do
         some saving or cleanup before leaving the game."""
-        logging.debug('leave game')
+        logging.info('leave game {}'.format(self.gameId))
+        self.isRunning = False
         self._save_screen()
         self.pause_game()
         
     def _save_screen(self):
         """Save the screen before leaving the game."""
         self.savedScreen = self.sense.get_pixels()
-        logging.debug('saved screen (len: {}): {}'.format(len(self.savedScreen), self.savedScreen))
+        #logging.debug('saved screen (len: {}): {}'.format(len(self.savedScreen), self.savedScreen))
 
     def is_solved(self):
         """Return true if the game is solved.
@@ -182,9 +187,14 @@ class GameWindow(object):
     def play(self):
         """Play the game: main game loop. 
         
-        Here the game will run, i.e. check for user input and react 
-        on it. 
         Subclasses must overwrite this method.
+        Here the game will run, i.e. check for user input and react 
+        on it. However, this must not block the main thread. 
+        If necessary, subclasses can check self.isRunning to see whether
+        the game is still on screen. Changing between games is done 
+        through resume_game() and leave_game(). Subclasses can overwrite
+        continue_game() and pause_game() to implement what is necessary 
+        for their game to be switched. 
         """        
         logging.info('no game implemented! Overwrite play()')
         
@@ -204,44 +214,7 @@ class GameWindow(object):
 
 
 def _test():
-
-    sense = SenseHat()
-    sense.clear()
-
-    game1 = GameWindow("A")
-    game2 = GameWindow("B")
-    game3 = GameWindow("C")
-    game4 = GameWindow("D")
-    grid = GameWindowGrid(2, 2)
-    print("Have {}".format(grid))
-    
-    grid.set_game(0, 0, game1)
-    grid.set_game(1, 0, game2)
-    grid.set_game(0, 1, game3)
-    grid.set_game(1, 1, game4)
-    print("Have {}".format(grid))
-    
-    while True:
-        for event in sense.stick.get_events():
-            # Check if the joystick was pressed
-            if event.action == "pressed":
-                # Check which direction
-                if event.direction == "up":
-                    sense.show_letter("U")      # Up arrow
-                elif event.direction == "down":
-                    sense.show_letter("D")      # Down arrow
-                elif event.direction == "left": 
-                    sense.show_letter("L")      # Left arrow
-                elif event.direction == "right":
-                    sense.show_letter("R")      # Right arrow
-                elif event.direction == "middle":
-                    sense.show_letter("M")      # Enter key
-
-                # Wait a while and then clear the screen
-                time.sleep(0.5)
-                sense.clear()
-            else:
-                print("other event")
+    logging.info('no test for base class available. For test, run counter._test()')
     
 
 if __name__ == "__main__":

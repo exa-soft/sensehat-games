@@ -11,7 +11,7 @@ Usage:
 
 """
 
-__author__ = 'Edith Birrer
+__author__ = 'Edith Birrer'
 __version__ = '0.2'
 
 import logging

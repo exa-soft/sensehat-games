@@ -1,6 +1,6 @@
 """Test for basic game "window" and"window collection" module."""
 
-__author__ = 'Edith Birrer
+__author__ = 'Edith Birrer'
 __version__ = '0.2'
 
 
