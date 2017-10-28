@@ -52,7 +52,6 @@ class GameWindow(object):
         self.isRunning = False
         self.savedScreen = None
         self.sense = SenseHat()
-        self.sense.low_light = False
         self.init_game()
  
     def init_game(self):
@@ -83,7 +82,8 @@ class GameWindow(object):
         call of this game window.  For other displays on restore, 
         subclasses can overwrite this method.
         """
-        return self.savedScreen if self.savedScreen is not None else ([0, 0, 0] * 64)
+        return self.savedScreen if self.savedScreen is not None \
+            else [(0, 0, 0) for i in range(64)]
         # can be overwritten by subclasses 
 
     def get_border_color(self):
@@ -93,7 +93,7 @@ class GameWindow(object):
         easier identify the game.  
         Subclasses should overwrite this method.
         """
-        return [120, 120, 120]
+        return [180, 180, 180]
         # should be overwritten by subclasses 
 
     def resume_game(self):
@@ -195,7 +195,8 @@ class GameWindow(object):
         through resume_game() and leave_game(). Subclasses can overwrite
         continue_game() and pause_game() to implement what is necessary 
         for their game to be switched. 
-        """        
+        """
+        self.sense.show_letter(self.gameId[0], self.get_border_color())
         logging.info('no game implemented! Overwrite play()')
         
     def fail(self):
@@ -206,15 +207,33 @@ class GameWindow(object):
         """
         logging.debug('failed!')
         # TODO display explosion
-        self.sense.show_letter("X")
+        self.sense.show_letter('X')
 
     def __str__(self):
-        return 'Game "{sf.name}", border color {sf.borderColor}'.format(sf=self)
-
+        return 'Game "{sf.gameId}", running: {sf.isRunning}'.format(sf=self)
 
 
 def _test():
-    logging.info('no test for base class available. For test, run counter._test()')
+    sense = SenseHat()
+    sense.low_light = False
+
+    global gm
+    gm = GameWindow('BaseGame')
+    print('game is {}'.format(gm))
+    gm.resume_game()
+    print('game is {}'.format(gm))
+    time.sleep(3)
+
+    gm.leave_game()
+    pixlist = [(120, 160, 80) for i in range(64)]
+    sense.set_pixels(pixlist)
+    time.sleep(2)
+    
+    gm.resume_game()
+    time.sleep(2)
+
+    logging.info('This is a very basic test. For better tests of this '
+        + 'class, run counter._test()')
     
 
 if __name__ == "__main__":

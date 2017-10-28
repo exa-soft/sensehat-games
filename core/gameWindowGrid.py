@@ -18,8 +18,10 @@ import logging
 import time
 #from sense_hat import SenseHat, ACTION_PRESSED, ACTION_HELD, ACTION_RELEASED
 from sense_emu import SenseHat, ACTION_PRESSED, ACTION_HELD, ACTION_RELEASED
-#from . import exceptions
 from signal import pause
+from ..output import fieldScroller
+from .exceptions import ArgumentError
+from .game import GameWindow
 
 
 sense = SenseHat()
@@ -37,6 +39,11 @@ posX = 0
 
 posY = 0
 """Y-position of the current game in the grid."""
+
+scrollSpeed = 0.2
+"""Speed of scrolling. Number is wait time between steps (higher means
+slower).
+"""
 
 _games = [[None for x in range(width)] for y in range(height)]
 
@@ -92,20 +99,25 @@ def go_up():
     If possible, moves the current position up and returns True.  
     Returns False if the current position is already in the topmost row.
     """
+    logging.info('go_up requested from current pos {}/{}'
+        .format(posX, posY))
     global posX, posY    
+    thisGame = get_game(posX, posY)
+    oldCol = thisGame.get_border_color()
     
     if posY == 0:
-        return False
-        # TODO implement "pseudo-scrolling" as display effect
-    else:
-        thisGame = get_game(posX, posY) 
-        thisGame.stop_game()
+        logging.info('go_up: no game above')
+        fieldScroller.try_scroll_up(oldCol, scrollSpeed)
         
+    else:
+        thisGame.leave_game()
         posY -= 1
         nextGame = get_game(posX, posY)
-        data = nextGame.get_data()
-        color = nextGame.get_border_color()
-        fieldScroller.scrollUp(data, color)
+        logging.info('go_up: next game (at pos {}/{}): {}'
+            .format(posX, posY, nextGame.gameId))
+        data = nextGame.get_screen()
+        newCol = nextGame.get_border_color()
+        fieldScroller.scroll_up(data, [oldCol, newCol], scrollSpeed)
         nextGame.resume_game()
 
 
@@ -115,25 +127,29 @@ def go_down():
     If possible, moves the current position down and returns True.  
     Returns False if the current position is already in the last row.
     """
-    global posX, posY    
+    logging.info('go_down requested from current pos {}/{}'
+        .format(posX, posY))
+    global posX, posY
+    thisGame = get_game(posX, posY) 
+    oldCol = thisGame.get_border_color()
     
-    if posY == height - 1:
-        return False
-        # TODO implement "pseudo-scrolling" as display effect
-    else:
-        thisGame = get_game(posX, posY) 
-        thisGame.stop_game()
+    if posY == height-1:
+        logging.info('go_down: no game below')
+        fieldScroller.try_scroll_down(oldCol, scrollSpeed)
         
+    else:
+        thisGame.leave_game()
         posY += 1
         nextGame = get_game(posX, posY)
-        data = nextGame.get_data()
-        color = nextGame.get_border_color()
-        fieldScroller.scrollDown(data, color)
+        logging.info('go_down: next game (at pos {}/{}): {}'
+            .format(posX, posY, nextGame.gameId))
+        data = nextGame.get_screen()
+        newCol = nextGame.get_border_color()
+        fieldScroller.scroll_down(data, [oldCol, newCol], scrollSpeed)
         nextGame.resume_game()
 
 
-#TODO go_left, go_right            
-        # TODO implement "pseudo-scrolling" as display effect
+#TODO go_left, go_right  
 
 
 def __str__():
@@ -202,8 +218,41 @@ def _count():
         time.sleep(2)
         
 
-def _test():
 
+def _test2Games_noJoystick():
+    sense.clear()
+
+    global width
+    width = 1
+    game1 = GameWindow("A")
+    game2 = GameWindow("B")
+    print(__str__())
+    set_game(0, 0, game1)
+    set_game(0, 1, game2)
+    x = 0
+    for y in range(2):
+        g = get_game(x, y)
+        print('game at {}/{}: {}'.format(x, y, g))
+        
+    start()
+    print('game1 running')
+    time.sleep(1)
+    print('go down...')
+    go_down()
+    time.sleep(2)
+    print('go down...')
+    go_down()
+    time.sleep(2)
+    print('go up...')
+    go_up()
+    time.sleep(2)
+    print('go up...')
+    go_up()
+    time.sleep(2)
+
+
+def _testX():
+    
     sense.clear()
 
     global width
@@ -212,13 +261,15 @@ def _test():
     game2 = GameWindow("B")
     game3 = GameWindow("C")
     game4 = GameWindow("D")
-    print(__str__())
-    
+    print(__str__())    
     set_game(0, 0, game1)
     set_game(1, 0, game2)
     set_game(0, 1, game3)
     set_game(1, 1, game4)
-    print(__str__())
+    for x in range(2):
+        for y in range(2):
+            g = get_game(x, y)
+            print('game at {}/{}: {}'.format(x, y, g))
 
 
     #while True:
@@ -244,7 +295,13 @@ def _test():
                 #print("other event")
 
 
+def _test():
+    _test2Games_noJoystick()
+    #pass
+    
+
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
+    #logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.INFO)
     _test()
 
